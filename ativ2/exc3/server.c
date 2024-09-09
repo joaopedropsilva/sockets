@@ -34,7 +34,7 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-    if(listen(sockid, MAXCONN_BACKLOG) == -1) {
+    if (listen(sockid, MAXCONN_BACKLOG) == -1) {
 		printf("Erro ao fazer listen\n");
 
 		close(sockid);
