@@ -7,8 +7,7 @@
 
 #define PORTA 8080
 #define TAM_BUFFER 1024
-// maq do lab ate 512 no backlog => total 513 - ativa + 512
-// testar com umas 18 no backlog
+#define MAXCONN_BACKLOG 18
 
 int main() {
 	int sockid = socket(AF_INET, SOCK_STREAM, 0);
@@ -35,8 +34,7 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-    int backlog = 1;
-    if(listen(sockid, backlog) == -1) {
+    if(listen(sockid, MAXCONN_BACKLOG) == -1) {
 		printf("Erro ao fazer listen\n");
 
 		close(sockid);
