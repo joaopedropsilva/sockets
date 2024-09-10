@@ -80,8 +80,10 @@ int main(void) {
 
                 if (strcmp(recebido, "sair") == 0) {
                     close(accept_id);
-
                     exit(EXIT_SUCCESS);
+                } else if (strcmp(recebido, "") == 0) {
+                    close(accept_id);
+                    exit(EXIT_FAILURE);
                 }
 
                 printf(
@@ -98,6 +100,7 @@ int main(void) {
                             strlen(recebido),
                             0
                         );
+
                 if (send_status < 0) {
                     printf("Erro ao ecoar a mensagem\n");
 
@@ -106,12 +109,11 @@ int main(void) {
 
                 printf("Mensagem ecoada para o cliente.\n");
             }
-        } else {
-            close(accept_id);
         }
+
+        close(accept_id);
     }
 
-    close(accept_id);
     close(sockid);
 
     return 0;

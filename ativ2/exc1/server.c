@@ -73,7 +73,7 @@ int main() {
             recebido[tam_msg_recebido] = '\0'; 
 
             // Caso o cliente queira desconectar-se
-            if (strcmp(recebido, "sair") == 0) {
+            if (strcmp(recebido, "sair") == 0 || strcmp(recebido, "") == 0) {
                 break;
             }
 
