@@ -102,14 +102,14 @@ int main(void) {
                         char msg_erro[] = "Falha ao recuperar dados do Apache";
 
                         memset(recebido, 0, TAM_BUFFER);
-                        strcpy(recebido, msg_erro); 
+                        strcpy(recebido, msg_erro);
                     } else {
                         memset(recebido, 0, TAM_BUFFER);
                         recebido[0] = '\n';
                         recebido[1] = '\t';
 
                         char buffer[TAM_BUFFER];
-                        while(fgets(buffer, TAM_BUFFER, pipe) != NULL) {
+                        while (fgets(buffer, TAM_BUFFER, pipe) != NULL) {
                             if (strlen(recebido) + strlen(buffer) > TAM_BUFFER)
                                 break;
 
@@ -118,14 +118,50 @@ int main(void) {
                         }
                     }
 
-                    int close_result = pclose(pipe);
-                    if (close_result < 0) {
+                    int r = pclose(pipe);
+                    if (r < 0) {
                         printf("Erro ao fechar o pipe\n");
                         exit(EXIT_FAILURE);
                     }
                 } else if (strcmp(recebido, "status_connection") == 0) {
-                }
+                    char netstat_command[40];
+                    sprintf(
+                        netstat_command,
+                        "netstat -an | grep %d | sed 's/.* //'",
+                        ntohs(cliente.sin_port)
+                    );
 
+                    FILE* pipe = popen(netstat_command, "r");
+
+                    if (pipe == NULL) {
+                        char msg_erro[] = "Falha ao recuperar dados da conexão";
+
+                        memset(recebido, 0, TAM_BUFFER);
+                        strcpy(recebido, msg_erro);
+                    } else {
+                        memset(recebido, 0, TAM_BUFFER);
+
+                        char buffer[TAM_BUFFER];
+                        while (fgets(buffer, TAM_BUFFER, pipe) != NULL) {
+                            if (strlen(recebido) + strlen(buffer) > TAM_BUFFER)
+                                break;
+
+                            buffer[strcspn(buffer, "\n")] = '_';
+                            strcat(recebido, buffer);
+                        }
+
+                        recebido[strlen(recebido) - 1] = 0;
+                        char* separador = strrchr(recebido, '_');
+                        char* copia = separador ? separador + 1 : recebido;
+                        strcpy(recebido, copia);
+                    }
+
+                    int r = pclose(pipe);
+                    if (r < 0) {
+                        printf("Erro ao fechar o pipe\n");
+                        exit(EXIT_FAILURE);
+                    }
+                }
                 int send_status =
                     send(
                             accept_id,
