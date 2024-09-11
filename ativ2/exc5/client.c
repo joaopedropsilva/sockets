@@ -36,7 +36,6 @@ int main() {
     }
 
 	char enviado[TAM_BUFFER];
-	char mensagem_original[TAM_BUFFER];
 
 	while (1) {
 		printf("Digite uma mensagem (ou 'sair' para encerrar): ");
@@ -58,75 +57,47 @@ int main() {
             break;
 		}
 
-		strcpy(mensagem_original, enviado); 
+        int status_envio = -1;
+        for (int i = 0; i < MAX_TENTATIVAS; i++) {
+            if (status_envio > 0)
+                break;
 
-		int tentativas = 0;
-		int confirmacao = 0;
+            status_envio =
+                send(
+                    sockid,
+                    (const char *)enviado,
+                    strlen(enviado),
+                    0
+                );
+        }
 
-		while (tentativas < MAX_TENTATIVAS) {
-			int status_envio =
-				send(
-					sockid,
-					(const char *)enviado, 
-					strlen(enviado),
-					0
-				);
 
-			if (status_envio < 0) {
-				printf(
-					"Erro ao enviar a mensagem. Tentativa %d de %d.\n",
-					tentativas + 1,
-					MAX_TENTATIVAS
-				);
+        if (status_envio < 0) {
+            printf(
+                "Falha ao enviar a mensagem após %i tentativas!\n",
+                MAX_TENTATIVAS
+            );
 
-				tentativas++;
-				continue;
-			}
+            continue;
+        }
 
-			int tam_msg_recebido =
-				recv(
-					sockid,
-					(char *)enviado,
-					TAM_BUFFER,
-					0
-				);
+        int tam_msg_recebido =
+            recv(
+                sockid,
+                (char *)enviado,
+                TAM_BUFFER,
+                0
+            );
 
-			if (tam_msg_recebido < 0) {
-				printf(
-					"Erro ao enviar a mensagem. Tentativa %d de %d.\n",
-					tentativas + 1,
-					MAX_TENTATIVAS
-				);
-
-				tentativas++;
-				continue;
-			}
+        if (tam_msg_recebido < 0) {
+            printf("Falha ao receber o eco!\n");
+            continue;
+        }
 			
-			// Adiciona o caractere '\0' para marcar o final da string
-			enviado[tam_msg_recebido] = '\0'; 
+        // Adiciona o caractere '\0' para marcar o final da string
+        enviado[tam_msg_recebido] = '\0';
 
-			printf("Servidor: %s\n", enviado);
-
-			if (strcmp(enviado, mensagem_original) == 0) {
-				confirmacao = 1;
-				break;
-			} else {
-				printf(
-					"Divergência na mensagem. Tentativa %d de %d.\n",
-					tentativas,
-					MAX_TENTATIVAS
-				);
-
-				tentativas++;
-			}
-		}
-		 
-		if (!confirmacao) {
-			printf(
-				"Falha ao receber a mensagem correta após %d tentativas.\n",
-				MAX_TENTATIVAS
-			);
-		}
+        printf("Servidor: %s\n", enviado);
 	}
 
 	close(sockid);
