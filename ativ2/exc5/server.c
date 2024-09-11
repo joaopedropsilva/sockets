@@ -94,7 +94,7 @@ int main(void) {
                       );
 
                 if (strcmp(recebido, "data_apache") == 0) {
-                    char ls_command[] = "ls /var/www";
+                    char ls_command[] = "ls /var/www/";
 
                     FILE* pipe = popen(ls_command, "r");
 
@@ -105,6 +105,8 @@ int main(void) {
                         strcpy(recebido, msg_erro); 
                     } else {
                         memset(recebido, 0, TAM_BUFFER);
+                        recebido[0] = '\n';
+                        recebido[1] = '\t';
 
                         char buffer[TAM_BUFFER];
                         while(fgets(buffer, TAM_BUFFER, pipe) != NULL) {
