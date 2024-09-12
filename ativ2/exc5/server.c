@@ -94,7 +94,7 @@ int main(void) {
                       );
 
                 if (strcmp(recebido, "data_apache") == 0) {
-                    char ls_command[] = "ls /var/www/";
+                    char ls_command[] = "ls /var/www/html/";
 
                     FILE* pipe = popen(ls_command, "r");
 
