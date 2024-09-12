@@ -9,7 +9,9 @@
 #define MAX_TENTATIVAS 3 
 #define ENDERECO_SERVIDOR "127.0.0.1" 
 
-int main() {
+
+int main(void) {
+    // Criação do socket UDP transmissor
     int sockid = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sockid < 0) {
@@ -17,6 +19,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    // Inicialização da estrutura com informações do servidor
     struct sockaddr_in servidor;
     unsigned long endereco_servidor;
 
@@ -27,22 +30,23 @@ int main() {
     servidor.sin_port = htons(PORTA);
     servidor.sin_addr.s_addr = endereco_servidor;
 
+    // Instanciação de um buffer para a comunicação
     char enviado[TAM_BUFFER];
-    char mensagem_original[TAM_BUFFER];
-
     while (1) {
+        // Captura da mensagem do cliente a ser enviada
         printf("Digite uma mensagem (ou 'sair' para encerrar): ");
         fgets(enviado, TAM_BUFFER, stdin);
 
-        // Remover quebra de linha
+        // Remover quebra de linha da mensagem ao pressionar "Enter"
         enviado[strcspn(enviado, "\n")] = 0;
 
+        // Verificação pela string de saída para parar a comunicação
         if (strcmp(enviado, "sair") == 0) {
             printf("Encerrando o cliente.\n");
             break;
         }
 
-        strcpy(mensagem_original, enviado); 
+        // Envio da mensagem ao servidor
         sendto(
             sockid,
             (const char *)enviado, 
@@ -53,6 +57,7 @@ int main() {
         );
 
 
+        // Recepção de uma resposta (eco) do servidor
         int len = sizeof(servidor);
         int tam_msg_recebido =
             recvfrom(
@@ -61,15 +66,10 @@ int main() {
                 TAM_BUFFER,
                 0,
                 (struct sockaddr *)&servidor,
-                &len
+                (socklen_t *)&len
             );
 
-        if (tam_msg_recebido < 0) {
-            printf("Erro ao receber resposta.\n");
-            continue;
-        } 
-
-        // Adiciona o caractere '\0' para marcar o final da string
+        // Marcação de final da string no buffer de recebido
         enviado[tam_msg_recebido] = '\0'; 
 
         printf("Servidor: %s\n", enviado);
@@ -79,6 +79,5 @@ int main() {
 
     return 0;
 }
-
 
 

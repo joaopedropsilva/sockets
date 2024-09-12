@@ -9,6 +9,7 @@
 
         
 int main() {
+    // Criação do socket UDP do receptor
     int sockid = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sockid < 0) {
@@ -16,6 +17,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    // Inicialização das estruturas do servidor e cliente
     struct sockaddr_in servidor; 
     struct sockaddr_in cliente; 
 
@@ -26,6 +28,7 @@ int main() {
     servidor.sin_port = htons(PORTA);
     servidor.sin_addr.s_addr = INADDR_ANY;
 
+    // Fazendo bind na porta definida para o servidor
     if (bind(sockid, (const struct sockaddr *)&servidor, sizeof(servidor)) < 0) {
         printf("Erro ao fazer bind\n");
 
@@ -33,30 +36,37 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    char enviado[TAM_BUFFER];
 
+    // Criação de um buffer para a comunicação
+    char recebido[TAM_BUFFER];
     while (1) {
+        // Recepção de uma mensagem no socket passivo
         int len = sizeof(cliente);
-
         int tam_msg_recebido =
             recvfrom(
                 sockid,
-                (char *)enviado,
+                (char *)recebido,
                 TAM_BUFFER,
                 0,
                 (struct sockaddr *)&cliente,
-                &len
+                (socklen_t *)&len
             );
 
-        // Adiciona o caractere '\0' para marcar o final da string
-        enviado[tam_msg_recebido] = '\0'; 
+        // Marcação de final de string no buffer de recebido
+        recebido[tam_msg_recebido] = '\0'; 
 
-        printf("Recebido de %s:%d - %s\n", inet_ntoa(cliente.sin_addr), ntohs(cliente.sin_port), enviado);
+        printf(
+            "Recebido de %s:%d - %s\n",
+            inet_ntoa(cliente.sin_addr),
+            ntohs(cliente.sin_port),
+            recebido
+        );
 
+        // Ecoando a mensagem de volta para o cliente
         sendto(
             sockid,
-            (const char *)enviado,
-            strlen(enviado),
+            (const char *)recebido,
+            strlen(recebido),
             0,
             (const struct sockaddr *)&cliente,
             len
@@ -66,5 +76,6 @@ int main() {
     }
 
     close(sockid);
+
     return 0;
 }
