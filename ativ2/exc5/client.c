@@ -9,7 +9,8 @@
 #define MAX_TENTATIVAS 3 
 #define ENDERECO_SERVIDOR "127.0.0.1" 
 
-int main() {
+int main(void) {
+    // Criação do socket TCP do transmissor
 	int sockid = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockid < 0) {
@@ -17,6 +18,7 @@ int main() {
         exit(EXIT_FAILURE);
 	}
 
+    // Inicialização das estruturas do servidor e cliente
 	struct sockaddr_in servidor;
 	unsigned long endereco_servidor;
 
@@ -35,15 +37,17 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+    // Criação de buffer para a comunicação
 	char enviado[TAM_BUFFER];
-
 	while (1) {
+        // Captura da mensagem do cliente a ser enviada
 		printf("Digite uma mensagem (ou 'sair' para encerrar): ");
 		fgets(enviado, TAM_BUFFER, stdin);
 
-		// Remover quebra de linha
+        // Remover quebra de linha da mensagem ao pressionar "Enter"
 		enviado[strcspn(enviado, "\n")] = 0;
 
+        // Verificação pela string de saída para parar a comunicação
 		if (strcmp(enviado, "sair") == 0) {
 		    printf("Encerrando o cliente.\n");
 
@@ -62,6 +66,7 @@ int main() {
             if (status_envio > 0)
                 break;
 
+            // Tentativa de envio da mensagem ao servidor
             status_envio =
                 send(
                     sockid,
@@ -73,14 +78,12 @@ int main() {
 
 
         if (status_envio < 0) {
-            printf(
-                "Falha ao enviar a mensagem após %i tentativas!\n",
-                MAX_TENTATIVAS
-            );
+            printf("Falha ao enviar a mensagem!\n");
 
             continue;
         }
 
+        // Tentativa de uma recepção de resposta do servidor
         int tam_msg_recebido =
             recv(
                 sockid,
@@ -90,11 +93,12 @@ int main() {
             );
 
         if (tam_msg_recebido < 0) {
-            printf("Falha ao receber o eco!\n");
+            printf("Falha ao receber a mensagem!\n");
+
             continue;
         }
 			
-        // Adiciona o caractere '\0' para marcar o final da string
+        // Marcação de final da string no buffer de recebido
         enviado[tam_msg_recebido] = '\0';
 
         printf("Servidor: %s\n", enviado);

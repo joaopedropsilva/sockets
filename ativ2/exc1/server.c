@@ -7,9 +7,11 @@
 
 #define PORTA 8080
 #define TAM_BUFFER 1024
-#define MAXCONN_BACKLOG 18
+#define MAXCONN_BACKLOG 512
+
 
 int main() {
+    // Criação do socket TCP receptor
 	int sockid = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (sockid < 0) {
@@ -17,6 +19,7 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
+    // Inicialização das estruturas do servidor e cliente
 	struct sockaddr_in servidor; 
 	struct sockaddr_in cliente; 
 
@@ -27,6 +30,7 @@ int main() {
 	servidor.sin_port = htons(PORTA);
 	servidor.sin_addr.s_addr = INADDR_ANY;
 
+    // Fazendo bind na porta definida para o servidor
 	if (bind(sockid, (struct sockaddr *)&servidor, sizeof(servidor)) < 0) {
 		printf("Erro ao fazer bind\n");
 
@@ -34,6 +38,8 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
+    // Colocando o socket passivo para ouvir e disponibilizar
+    // um máximo de conexões numa fila (backlog)
     if(listen(sockid, MAXCONN_BACKLOG) == -1) {
 		printf("Erro ao fazer listen\n");
 
@@ -41,9 +47,18 @@ int main() {
 		exit(EXIT_FAILURE);
     }
 
+    // Buffer para o conteúdo da comunicação
+    char recebido[TAM_BUFFER];
+    int socklen = sizeof(struct sockaddr_in);
     while (1) {
-        int socklen = sizeof(struct sockaddr_in);
-        int accept_id = accept(sockid, (struct sockaddr *)&cliente, (socklen_t *)&socklen);
+        // Aceitando conexões no socket do servidor
+        int accept_id =
+            accept(
+                sockid,
+                (struct sockaddr *)&cliente,
+                (socklen_t *)&socklen
+            );
+
         if (accept_id < 0) {
             printf("Erro ao aceitar conexão\n");
 
@@ -52,8 +67,8 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        char recebido[TAM_BUFFER];
         while (1) {
+            // Tentativa de recepção de uma mensagem
             int tam_msg_recebido =
                 recv(
                         accept_id,
@@ -69,23 +84,30 @@ int main() {
             }
 
 
-            // Adiciona o caractere '\0' para marcar o final da string
+            // Marcação de final da string no buffer de recebido
             recebido[tam_msg_recebido] = '\0'; 
 
-            // Caso o cliente queira desconectar-se
+            // Verificação de desconexão do cliente
+            // "" abrange o caso de suspensão forçada do processo cliente
             if (strcmp(recebido, "sair") == 0 || strcmp(recebido, "") == 0) {
                 break;
             }
 
-            printf("Recebido de %s:%d - %s\n", inet_ntoa(cliente.sin_addr), ntohs(cliente.sin_port), recebido);
+            printf(
+                "Recebido de %s:%d - %s\n",
+                inet_ntoa(cliente.sin_addr),
+                ntohs(cliente.sin_port),
+                recebido
+            );
 
+            // Tentativa de envio do eco
             int send_status =
                 send(
-                        accept_id,
-                        (const char *)recebido,
-                        strlen(recebido),
-                        0
-                    );
+                    accept_id,
+                    (const char *)recebido,
+                    strlen(recebido),
+                    0
+                );
 
             if (send_status < 0) {
                 printf("Erro ao ecoar mensagem\n");
@@ -96,6 +118,7 @@ int main() {
             printf("Mensagem ecoada para o cliente.\n");
         }
 
+        // Fechamento da conexão para o cliente
         close(accept_id);
     }
 
@@ -103,3 +126,4 @@ int main() {
 
 	return 0;
 }
+
